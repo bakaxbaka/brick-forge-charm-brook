@@ -1,0 +1,25 @@
+services:
+  bitcoind:
+    image: ruimarinho/bitcoin-core:latest
+    ports:
+      - "8332:8332"
+      - "8333:8333"
+    volumes:
+      - ./data:/home/bitcoin/.bitcoin
+      - ./bitcoin/bitcoin.conf:/home/bitcoin/.bitcoin/bitcoin.conf:ro
+    restart: unless-stopped
+
+  analysis:
+    build: ./analysis
+    environment:
+      BITCOIN_RPC_HOST: bitcoind
+      BITCOIN_RPC_PORT: 8332
+      BITCOIN_RPC_USER: btcforensic
+      BITCOIN_RPC_PASSWORD: change_this_secure_password
+    volumes:
+      - ./analysis:/app
+      - ./results:/results
+      - ./cache:/cache
+    depends_on:
+      - bitcoind
+    command: python -u /app/scan_nonce_reuse.py --start 210000 --end 220000 --output /results/nonce_reuse.json
